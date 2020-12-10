@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>课程安排</title>
+    <meta name="keywords" content="HTML5 Admin Template"/>
+    <meta name="description" content="Perfect Admin - Responsive HTML5 Admin Template">
+    <meta name="author" content="perfectusinc.com">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <!-- Google Web Fonts -->
+    <link href="https://fonts.googleapis.com/css?family=Ubuntu" rel="stylesheet">
+    <!-- Bootstrap CSS CDN -->
+    <link rel="stylesheet" href="http://cdn.bootstrapmb.com/bootstrap/4.1.0/css/bootstrap.min.css">
+    <!-- Page CSS -->
+    <link rel="stylesheet" href="../../assets/css/elements/tabs.css">
+    <link rel="stylesheet" href="../../assets/css/tables/datatables.min.css">
+    <link rel="stylesheet" href="../../assets/css/elements/timeline.css">
+    <link rel="stylesheet" href="../../assets/css/elements/modals.css">
+    <link rel="stylesheet" href="../../assets/css/elements/sweetalert.css">
+    <script src="../../assets/js/elements/sweetalert/sweetalert_custom.js"></script>
+    <!-- Custom CSS Starts -->
+    <link rel="stylesheet" href="../../assets/css/skin/all-skins.css">
+    <link rel="stylesheet" href="../../assets/css/general/style.css">
+    <link rel="stylesheet" href="../../assets/css/sidebar/side-nav.css">
+    <link rel="stylesheet" href="../../assets/css/fonts/fonts-style.css">
+    <link rel="stylesheet" href="../../assets/css/nanoscroller/nanoscroller.css">
+    <link rel="stylesheet" href="../../css/main.css">
+    <link rel="stylesheet" href="../../assets/css/elements/toastr.css">
+    <script>
+        $(function () {
+            $('#myModal').modal({
+                backdrop: false,
+                show: false
+            });
+        });
+        var url="/schedule/insert";
+        var id=0;
+        function removeUser() {
+            var rows = $("#mytab").bootstrapTable('getSelections');
+            if (rows.length == 0) {
+                toastr.info("请选择要移除的信息", '操作提醒', {positionClass: 'toast-bottom-right'});
+            } else {
+                var ids = "";
+                for (var i = 0; i < rows.length; i++) {
+                    ids += rows[i].id + ","
+                }
+                $.ajax({
+                    url: '/schedule/delete',
+                    method: 'post',
+                    data: {"ids": ids},
+                    type: 'json',
+                    success: function (result) {
+                        if (result.success === 'true') {
+                            $('#mytab').bootstrapTable('refresh');
+                            toastr.info(result.message, '操作提醒', {positionClass: 'toast-bottom-right'});
+                        } else {
+                            toastr.warning(result.message, '操作提醒', {positionClass: 'toast-bottom-right'});
+                        }
+                    }
+                })
+            }
+        }
+
+        function addUser() {
+            clearForm();
+            $("#modal_name").text("添加课程安排信息");
+            $('#myModal').modal();
+            url = "/schedule/insert";
+            id = 0;
+        }
+
+        function updateUser() {
+            var rows = $('#mytab').bootstrapTable("getSelections");
+            if (rows.length === 1) {
+
+                $("#cid").val(rows[0].classInfo!=null?rows[0].classInfo.id:"");
+                $("#tid").val(rows[0].teacher!=null?rows[0].teacher.id:"");
+                $("#sid").val(rows[0].subject!=null?rows[0].subject.id:"");
+                $("#start").val(rows[0].start);
+                $("#end").val(rows[0].end);
+                $("#number").val(rows[0].number);
+                $("#year").val(rows[0].year);
+                $("#term").val(rows[0].term);
+                $("#modal_name").text("更新课程安排信息");
+                $('#myModal').modal();
+                url = "/schedule/update";
+                id = rows[0].id;
+            } else {
+                toastr.warning('请选择你要修改的数据行', '操作提醒', {positionClass: 'toast-bottom-right'});
+            }
+
+        }
+
+        function clearForm() {
+            $("#user_form").clearForm();
+        }
+
+        function submit_form() {
+
+            var options = {
+                url: url,
+                data: { id: id},
+                success: function (result) {
+                    var obj = eval('(' + result + ')');
+                    if (obj.success === "true") {
+                        $('#mytab').bootstrapTable('refresh');
+                        toastr.info(obj.message, '操作提醒', {positionClass: 'toast-bottom-right'});
+                        $('#myModal').modal("hide");
+                    } else {
+                        toastr.warning(obj.message, '操作提醒', {positionClass: 'toast-bottom-right'});
+                    }
+                }
+            };
+            $("#user_form").ajaxForm(options);
+
+        }
+    </script>
+</head>
+
+<body class="sidebar-mini fixed skin-blue">
+<div class="wrapper">
+    <!-- Header Section Starts -->
+    <header class="main-header">
+        <!-- Logo -->
+        <a href="index2.html" class="logo">
+            <!-- mini logo for sidebar mini 50x50 pixels -->
+            <span class="logo-mini"><b>P</b>AD</span>
+            <!-- logo for regular state and mobile devices -->
+            <span class="logo-lg"><b>Perfect </b>Admin</span>
+        </a>
+        <nav class="navbar navbar-static-top">
+            <!-- Sidebar toggle button-->
+            <a href="#" class="sidebar-toggle" data-toggle="push-menu" role="button">
+                <span class="sr-only">Toggle navigation</span>
+            </a>
+            <h3 style="margin-right: 30px"><small th:text="${user.name}">admin</small></h3>
+        </nav>
+    </header>
+    <!-- Header Section Ends -->
+
+    <!-- Sidebar Section Starts -->
+    <aside class="main-sidebar">
+        <div class="nano">
+            <div class="nano-content">
+                <ul class="sidebar-menu" data-widget="tree">
+                    <li class="header">主菜单</li>
+                    <li class="treeview">
+                        <a href="#">
+                            <i class="fa fa-user"></i>
+                            <span>用户管理</span>
+                            <span class="pull-right-container">
+									<i class="fa fa-angle-left pull-right"></i>
+								</span>
+                        </a>
+                        <ul class="treeview-menu">
+                            <li><a href="/admin"><i class="fa fa-circle-o"></i> 用户管理</a></li>
+                            <li><a href="/admin/roleManage"><i class="fa fa-circle-o"></i> 权限设置</a></li>
+                        </ul>
+                    </li>
+                    <li class="active treeview">
+                        <a href="#">
+                            <i class="fa fa-laptop"></i>
+                            <span>课程管理</span>
+                            <span class="pull-right-container">
+									<i class="fa fa-angle-left pull-right"></i>
+								</span>
+                        </a>
+                        <ul class="treeview-menu">
+                            <li><a href="/admin/subjectManage"><i class="fa fa-circle-o"></i>课程信息管理</a></li>
+                            <li><a href="/admin/scheduleManage"><i class="fa fa-circle-o"></i>课程安排</a></li>
+                        </ul>
+                    </li>
+                    <li class="treeview">
+                        <a href="#">
+                            <i class="fa fa-edit"></i> <span>班级管理</span>
+                            <span class="pull-right-container">
+									<i class="fa fa-angle-left pull-right"></i>
+								</span>
+                        </a>
+                        <ul class="treeview-menu">
+                            <li><a href="/admin/classManage"><i class="fa fa-circle-o"></i>班级信息管理</a></li>
+                        </ul>
+                    </li>
+                    <li class="treeview">
+                        <a href="#">
+                            <i class="fa fa-envelope"></i> <span>请假管理</span>
+                            <span class="pull-right-container">
+									<i class="fa fa-angle-left pull-right"></i>
+								</span>
+                        </a>
+                        <ul class="treeview-menu">
+                            <li><a href="/admin/vacationManage"><i class="fa fa-circle-o"></i>请假信息管理</a></li>
+                        </ul>
+                    </li>
+                    <li class="treeview">
+                        <a href="#">
+                            <i class="fa fa-gear"></i> <span>系统设置</span>
+                            <span class="pull-right-container">
+									<i class="fa fa-angle-left pull-right"></i>
+								</span>
+                        </a>
+                        <ul class="treeview-menu">
+                            <li><a href="/admin/changePassword"><i class="fa fa-circle-o"></i>修改密码</a></li>
+                            <li><a href="/logout"><i class="fa fa-circle-o"></i>退出系统</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </aside>
+    <!-- Sidebar Section Ends -->
+
+    <!-- Page Content Starts-->
+    <div class="content-wrapper">
+        <section class="content-header">
+            <h1>
+                课程安排
+            </h1>
+        </section>
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="cardbg">
+                    <div id="toolbar">
+                        <div onclick="addUser()" class=" btn btn-info btn-sm"><span
+                                class="fa fa-plus"></span>&nbsp;&nbsp;添加信息
+                        </div>
+                        <div onclick="updateUser()" class=" btn btn-info btn-sm"><span
+                                class="fa fa-edit"></span>&nbsp;&nbsp;信息修改
+                        </div>
+                        <div onclick="removeUser()" class=" btn btn-info btn-sm"><span
+                                class="fa fa-remove"></span>&nbsp;&nbsp;批量删除
+                        </div>
+                    </div>
+                    <table id="mytab"
+                           class="table table-striped table-bordered dt-responsive nowrap"></table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Page Content Ends -->
+
+    <!-- Back to Top Starts -->
+    <a href="javascript:" id="return-to-top"><i class="fa fa-arrow-up" aria-hidden="true"></i></a>
+    <!-- Back to Top Ends -->
+
+    <!-- Footer Section Starts -->
+    <footer class="main-footer">
+        <div class="pull-right hidden-xs">
+            Version 1.0.0
+        </div>
+        <p class="mb-0">Copyright © 2019 <a target="_blank" href="http://www.bootstrapmb.com/">Perfectus Inc</a>.
+            All rights
+            reserved.</p>
+    </footer>
+    <!-- Footer Section Ends -->
+
+</div>
+<!-- jQuery CDN - Slim version (=without AJAX) -->
+<script src="../../assets/js/jquery/slim.min.js"></script>
+<!-- Popper.JS -->
+<script src="../../assets/js/jquery/popper.min.js"></script>
+<!-- Bootstrap JS -->
+<script src="../../assets/js/jquery/jquery.min.js"></script>
+<script src="http://cdn.bootstrapmb.com/bootstrap/4.1.0/js/bootstrap.min.js"></script>
+<!-- Page JS -->
+<script src="../../assets/js/elements/accordion.js"></script>
+<script src="../../assets/js/tables/datatables.min.js"></script>
+<script src="../../assets/js/tables/dataTables.buttons.min.js"></script>
+<script src="../../assets/js/tables/jszip.min.js"></script>
+<script src="../../assets/js/tables/pdfmake.min.js"></script>
+<script src="../../assets/js/tables/vfs_fonts.js"></script>
+<script src="../../assets/js/tables/buttons.html5.min.js"></script>
+<script src="../../assets/js/tables/buttons.print.min.js"></script>
+<script src="../../assets/js/tables/datatable.js"></script>
+<script src="../../assets/js/elements/toastr/toastr.js"></script>
+<script src="../../assets/js/elements/toastr/toastr_custom.js"></script>
+<script src="../../assets/js/elements/sweetalert/sweetalert.min.js"></script>
+<!-- Theme JS -->
+<script src="../../assets/js/nanoscroller/nanoscroller.js"></script>
+<script src="../../assets/js/custom/theme.js"></script>
+<script src="../../js/bootstrap-table.min.js"></script>
+<script src="../../js/bootstrap-table-zh-CN.js"></script>
+<script src="../../js/jquery.form.min.js"></script>
+<script>
+    var url = window.location.href;
+    var uid = url.substring(url.lastIndexOf('=') + 1, url.length);
+    $('#mytab').bootstrapTable({
+        url: '/schedule/list',
+        toolbar: "#toolbar",
+        sidePagination: "true",
+        striped: true, // 是否显示行间隔色
+        search: "true",
+        uniqueId: "id",
+        pageSize: "5",
+        pageNumber: 1, //当前第几页
+        pageList: [5, 10, 15],
+        pagination: true, // 是否分页
+        smartDisplay: false,
+        sortable: true, // 是否启用排序
+        columns: [
+            {
+                field: 'ids',
+                checkbox: true,
+            },
+            {
+                field: 'classInfo',
+                title: '班级名',
+                formatter: function (value, row, index) {
+                    if (row.classInfo != null) {
+                        return row.classInfo.name;
+                    }else{
+                        return value;
+                    }
+                },
+            },
+            {
+                field: 'classInfo',
+                title: '班级号',
+                formatter: function (value, row, index) {
+                    if (row.classInfo != null) {
+                        return row.classInfo.id;
+                    }else{
+                        return value;
+                    }
+                },
+            },
+            {
+                field: 'subject',
+                title: '课程名',
+                formatter: function (value, row, index) {
+                    if (row.subject != null) {
+                        return row.subject.name;
+                    }else{
+                        return value;
+                    }
+                },
+            },
+            {
+                field: 'subject',
+                title: '课程号',
+                formatter: function (value, row, index) {
+                    if (row.subject != null) {
+                        return row.subject.id;
+                    }else{
+                        return value;
+                    }
+                },
+            },
+            {
+                field: 'teacher',
+                title: '教师号',
+                formatter: function (value, row, index) {
+                    if (row.teacher != null) {
+                        return row.teacher.id;
+                    }else{
+                        return value;
+                    }
+                },
+            },
+            {
+                field: 'start',
+                title: '开始',
+            },
+            {
+                field: 'end',
+                title: '结束',
+            },
+            {
+                field: 'number',
+                title: '星期',
+            },
+            {
+                field: 'year',
+                title: '学年',
+            },
+            {
+                field: 'term',
+                title: '学期',
+            },
+
+        ]
+    });
+</script>
+<div id="myModal" class="modal fade">
+    <div class="modal-dialog" style="width: 480px">
+        <form id="user_form" method="post">
+            <div class="modal-content">
+                <div class="modal-header" style="background-color: #4d67bd">
+                    <h5><small id="modal_name" style="color: white">添加信息</small></h5>
+                    <button class="close" data-dismiss="modal">x</button>
+                </div>
+                <div class="modal-body">
+                    <div class="input-group" style="margin-bottom: 10px">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text">班级号</span>
+                        </div>
+                        <input class="form-control" placeholder="班级号" name="cid" id="cid">
+                    </div>
+                    <div class="input-group" style="margin-bottom: 10px">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text">课程号</span>
+                        </div>
+                        <input class="form-control" placeholder="课程号" name="sid" id="sid">
+                    </div>
+                    <div class="input-group" style="margin-bottom: 10px">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text">教师号</span>
+                        </div>
+                        <input class="form-control" placeholder="教师号" name="tid" id="tid">
+                    </div>
+                    <div class="input-group" style="margin-bottom: 10px">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text">星期</span>
+                        </div>
+                        <select class="form-control" name="number" id="number" placeholder="星期">
+                            <option selected>1</option>
+                            <option>2</option>
+                            <option>3</option>
+                            <option>4</option>
+                            <option>5</option>
+                            <option>6</option>
+                            <option>7</option>
+                        </select>
+                    </div>
+                    <div class="input-group" style="margin-bottom: 10px">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text">开始时间</span>
+                        </div>
+                        <input class="form-control" placeholder="学时" name="start" id="start" type="time">
+                    </div>
+                    <div class="input-group" style="margin-bottom: 10px">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text">结束时间</span>
+                        </div>
+                        <input class="form-control" placeholder="教材名称" name="end" id="end" type="time">
+                    </div>
+                    <div class="input-group" style="margin-bottom: 10px">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text">学期</span>
+                        </div>
+                        <select class="form-control" placeholder="学期" name="term" id="term">
+                            <option>上</option>
+                            <option>下</option>
+                        </select>
+                    </div>
+                    <div class="input-group" style="margin-bottom: 10px">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text">学年</span>
+                        </div>
+                        <input class="form-control" placeholder="学年" name="year" id="year" type="number" th:value="2020">
+                    </div>
+                </div>
+                <div class="modal-footer" style="display: block">
+                    <button onclick="clearForm()" class="btn btn-info" style="float: left">清除</button>
+                    <button onclick="submit_form()" class="btn btn-info" style="float: right">提交</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+</body>
+
+</html>

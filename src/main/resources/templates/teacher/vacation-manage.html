@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>请假信息管理</title>
+    <meta name="keywords" content="HTML5 Admin Template"/>
+    <meta name="description" content="Perfect Admin - Responsive HTML5 Admin Template">
+    <meta name="author" content="perfectusinc.com">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <!-- Google Web Fonts -->
+    <link href="https://fonts.googleapis.com/css?family=Ubuntu" rel="stylesheet">
+    <!-- Bootstrap CSS CDN -->
+    <link rel="stylesheet" href="http://cdn.bootstrapmb.com/bootstrap/4.1.0/css/bootstrap.min.css">
+    <!-- Page CSS -->
+    <link rel="stylesheet" href="../../assets/css/elements/tabs.css">
+    <link rel="stylesheet" href="../../assets/css/tables/datatables.min.css">
+    <link rel="stylesheet" href="../../assets/css/elements/timeline.css">
+    <link rel="stylesheet" href="../../assets/css/elements/modals.css">
+    <link rel="stylesheet" href="../../assets/css/elements/sweetalert.css">
+    <script src="../../assets/js/elements/sweetalert/sweetalert_custom.js"></script>
+    <!-- Custom CSS Starts -->
+    <link rel="stylesheet" href="../../assets/css/skin/all-skins.css">
+    <link rel="stylesheet" href="../../assets/css/general/style.css">
+    <link rel="stylesheet" href="../../assets/css/sidebar/side-nav.css">
+    <link rel="stylesheet" href="../../assets/css/fonts/fonts-style.css">
+    <link rel="stylesheet" href="../../assets/css/nanoscroller/nanoscroller.css">
+    <link rel="stylesheet" href="../../css/main.css">
+    <link rel="stylesheet" href="../../assets/css/elements/toastr.css">
+    <script>
+        $(function () {
+            $('#myModal').modal({
+                backdrop: false,
+                show: false
+            });
+        });
+        var url="/schedule/insert";
+        var id=0;
+        function removeUser() {
+            var rows = $("#mytab").bootstrapTable('getSelections');
+            if (rows.length == 0) {
+                toastr.info("请选择要移除的信息", '操作提醒', {positionClass: 'toast-bottom-right'});
+            } else {
+                var ids = "";
+                for (var i = 0; i < rows.length; i++) {
+                    ids += rows[i].id + ","
+                }
+                $.ajax({
+                    url: '/vacation/delete',
+                    method: 'post',
+                    data: {"ids": ids},
+                    type: 'json',
+                    success: function (result) {
+                        if (result.success === 'true') {
+                            $('#mytab').bootstrapTable('refresh');
+                            toastr.info(result.message, '操作提醒', {positionClass: 'toast-bottom-right'});
+                        } else {
+                            toastr.warning(result.message, '操作提醒', {positionClass: 'toast-bottom-right'});
+                        }
+                    }
+                })
+            }
+        }
+
+        function addUser() {
+            clearForm();
+            $("#modal_name").text("添加请假信息");
+            $('#myModal').modal();
+            url = "/vacation/insert";
+            id = 0;
+        }
+
+        function updateUser() {
+            var rows = $('#mytab').bootstrapTable("getSelections");
+            if (rows.length === 1) {
+                $("#uid").val(rows[0].user!=null?rows[0].user.id:"");
+                $("#start").val(rows[0].start);
+                $("#end").val(rows[0].end);
+                $("#address").val(rows[0].address);
+                $("#status").val(rows[0].status);
+                $("#title").val(rows[0].title);
+                $("#description").val(rows[0].description);
+                $("#contents").val(rows[0].content);
+                $("#modal_name").text("更新请假信息");
+                $('#myModal').modal();
+                url = "/vacation/update";
+                id = rows[0].id;
+            } else {
+                toastr.warning('请选择你要修改的数据行', '操作提醒', {positionClass: 'toast-bottom-right'});
+            }
+
+        }
+
+        function clearForm() {
+            $("#user_form").clearForm();
+        }
+
+        function submit_form() {
+
+            var options = {
+                url: url,
+                data: { id: id},
+                success: function (result) {
+                    var obj = eval('(' + result + ')');
+                    if (obj.success === "true") {
+                        $('#mytab').bootstrapTable('refresh');
+                        toastr.info(obj.message, '操作提醒', {positionClass: 'toast-bottom-right'});
+                        $('#myModal').modal("hide");
+                    } else {
+                        toastr.warning(obj.message, '操作提醒', {positionClass: 'toast-bottom-right'});
+                    }
+                }
+            };
+            $("#user_form").ajaxForm(options);
+
+        }
+    </script>
+</head>
+
+<body class="sidebar-mini fixed skin-blue">
+<div class="wrapper">
+    <!-- Header Section Starts -->
+    <header class="main-header">
+        <!-- Logo -->
+        <a href="index2.html" class="logo">
+            <!-- mini logo for sidebar mini 50x50 pixels -->
+            <span class="logo-mini"><b>P</b>AD</span>
+            <!-- logo for regular state and mobile devices -->
+            <span class="logo-lg"><b>Perfect </b>Admin</span>
+        </a>
+        <nav class="navbar navbar-static-top">
+            <!-- Sidebar toggle button-->
+            <a href="#" class="sidebar-toggle" data-toggle="push-menu" role="button">
+                <span class="sr-only">Toggle navigation</span>
+            </a>
+            <h3 style="margin-right: 30px"><small th:text="${user.name}">admin</small></h3>
+        </nav>
+    </header>
+    <!-- Header Section Ends -->
+
+    <!-- Sidebar Section Starts -->
+    <aside class="main-sidebar">
+        <div class="nano">
+            <div class="nano-content">
+                <ul class="sidebar-menu" data-widget="tree">
+                    <li class="header">主菜单</li>
+                    <li class="treeview">
+                        <a href="/teacher">
+                            <i class="fa fa-user"></i>
+                            <span>教授课程</span>
+                            <span class="pull-right-container">
+									<i class="fa fa-angle-left pull-right"></i>
+								</span>
+                        </a>
+                        <ul class="treeview-menu">
+                            <li><a href="/teacher"><i class="fa fa-circle-o"></i>教授课程信息</a></li>
+                        </ul>
+
+                    </li>
+                    <li class="treeview">
+                        <a href="#">
+                            <i class="fa fa-laptop"></i>
+                            <span>考勤管理</span>
+                            <span class="pull-right-container">
+                            <i class="fa fa-angle-left pull-right"></i>
+                            </span>
+                        </a>
+                        <ul class="treeview-menu">
+                            <li><a href="/teacher/attendanceManage"><i class="fa fa-circle-o"></i>考勤信息管理</a></li>
+                        </ul>
+                    </li>
+                    <li class="active treeview">
+                        <a href="#">
+                            <i class="fa fa-envelope"></i> <span>请假管理</span>
+                            <span class="pull-right-container">
+									<i class="fa fa-angle-left pull-right"></i>
+								</span>
+                        </a>
+                        <ul class="treeview-menu">
+                            <li><a href="/teacher/vacationManage"><i class="fa fa-circle-o"></i>请假信息管理</a></li>
+                        </ul>
+                    </li>
+                    <li class="treeview">
+                        <a href="#">
+                            <i class="fa fa-gear"></i> <span>系统设置</span>
+                            <span class="pull-right-container">
+									<i class="fa fa-angle-left pull-right"></i>
+								</span>
+                        </a>
+                        <ul class="treeview-menu">
+                            <li><a href="/teacher/changePassword"><i class="fa fa-circle-o"></i>修改密码</a></li>
+                            <li><a href="/logout"><i class="fa fa-circle-o"></i>退出系统</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </aside>
+    <!-- Sidebar Section Ends -->
+
+    <!-- Page Content Starts-->
+    <div class="content-wrapper">
+        <section class="content-header">
+            <h1>
+                请假信息管理
+            </h1>
+        </section>
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="cardbg">
+                    <div id="toolbar">
+                        <div onclick="addUser()" class=" btn btn-info btn-sm"><span
+                                class="fa fa-plus"></span>&nbsp;&nbsp;添加请假信息
+                        </div>
+                        <div onclick="updateUser()" class=" btn btn-info btn-sm"><span
+                                class="fa fa-edit"></span>&nbsp;&nbsp;请假信息修改
+                        </div>
+                        <div onclick="removeUser()" class=" btn btn-info btn-sm"><span
+                                class="fa fa-remove"></span>&nbsp;&nbsp;批量删除
+                        </div>
+                    </div>
+                    <table id="mytab"
+                           class="table table-striped table-bordered dt-responsive nowrap"></table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Page Content Ends -->
+
+    <!-- Back to Top Starts -->
+    <a href="javascript:" id="return-to-top"><i class="fa fa-arrow-up" aria-hidden="true"></i></a>
+    <!-- Back to Top Ends -->
+
+    <!-- Footer Section Starts -->
+    <footer class="main-footer">
+        <div class="pull-right hidden-xs">
+            Version 1.0.0
+        </div>
+        <p class="mb-0">Copyright © 2019 <a target="_blank" href="http://www.bootstrapmb.com/">Perfectus Inc</a>.
+            All rights
+            reserved.</p>
+    </footer>
+    <!-- Footer Section Ends -->
+
+</div>
+<!-- jQuery CDN - Slim version (=without AJAX) -->
+<script src="../../assets/js/jquery/slim.min.js"></script>
+<!-- Popper.JS -->
+<script src="../../assets/js/jquery/popper.min.js"></script>
+<!-- Bootstrap JS -->
+<script src="../../assets/js/jquery/jquery.min.js"></script>
+<script src="http://cdn.bootstrapmb.com/bootstrap/4.1.0/js/bootstrap.min.js"></script>
+<!-- Page JS -->
+<script src="../../assets/js/elements/accordion.js"></script>
+<script src="../../assets/js/tables/datatables.min.js"></script>
+<script src="../../assets/js/tables/dataTables.buttons.min.js"></script>
+<script src="../../assets/js/tables/jszip.min.js"></script>
+<script src="../../assets/js/tables/pdfmake.min.js"></script>
+<script src="../../assets/js/tables/vfs_fonts.js"></script>
+<script src="../../assets/js/tables/buttons.html5.min.js"></script>
+<script src="../../assets/js/tables/buttons.print.min.js"></script>
+<script src="../../assets/js/tables/datatable.js"></script>
+<script src="../../assets/js/elements/toastr/toastr.js"></script>
+<script src="../../assets/js/elements/toastr/toastr_custom.js"></script>
+<script src="../../assets/js/elements/sweetalert/sweetalert.min.js"></script>
+<!-- Theme JS -->
+<script src="../../assets/js/nanoscroller/nanoscroller.js"></script>
+<script src="../../assets/js/custom/theme.js"></script>
+<script src="../../js/bootstrap-table.min.js"></script>
+<script src="../../js/bootstrap-table-zh-CN.js"></script>
+<script src="../../js/jquery.form.min.js"></script>
+<script>
+    var url = window.location.href;
+    var uid = url.substring(url.lastIndexOf('=') + 1, url.length);
+    $('#mytab').bootstrapTable({
+        url: '/vacation/list',
+        toolbar: "#toolbar",
+        sidePagination: "true",
+        striped: true, // 是否显示行间隔色
+        search: "true",
+        uniqueId: "id",
+        pageSize: "5",
+        pageNumber: 1, //当前第几页
+        pageList: [5, 10, 15],
+        pagination: true, // 是否分页
+        smartDisplay: false,
+        sortable: true, // 是否启用排序
+        columns: [
+            {
+                field: 'ids',
+                checkbox: true,
+            },
+            {
+                field: 'user',
+                title: '请假人编号',
+                formatter: function (value, row, index) {
+                    if (row.user != null) {
+                        return row.user.id;
+                    }else{
+                        return value;
+                    }
+                },
+            },
+            {
+                field: 'user',
+                title: '请假人姓名',
+                formatter: function (value, row, index) {
+                    if (row.user != null) {
+                        return row.user.name;
+                    }else{
+                        return value;
+                    }
+                },
+            },
+            {
+                field: 'title',
+                title: '标题',
+            },
+            {
+                field: 'content',
+                title: '备注',
+            },
+            {
+                field: 'address',
+                title: '去向',
+            },
+            {
+                field: 'start',
+                title: '开始',
+            },
+            {
+                field: 'end',
+                title: '结束',
+            },
+            {
+                field: 'status',
+                title: '状态',
+            },
+            {
+                field: 'description',
+                title: '审核意见',
+            },
+
+        ]
+    });
+</script>
+<div id="myModal" class="modal fade">
+    <div class="modal-dialog" style="width: 480px">
+        <form id="user_form" method="post">
+            <div class="modal-content">
+                <div class="modal-header" style="background-color: #4d67bd">
+                    <h5><small id="modal_name" style="color: white">添加信息</small></h5>
+                    <button class="close" data-dismiss="modal">x</button>
+                </div>
+                <div class="modal-body">
+                    <div class="input-group" style="margin-bottom: 10px">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text">标题</span>
+                        </div>
+                        <input class="form-control" placeholder="标题" name="title" id="title">
+                    </div>
+                    <div class="input-group" style="margin-bottom: 10px">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text">开始时间</span>
+                        </div>
+                        <input class="form-control" placeholder="开始时间" name="start" id="start">
+                    </div>
+                    <div class="input-group" style="margin-bottom: 10px">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text">结束时间</span>
+                        </div>
+                        <input class="form-control" placeholder="结束时间" name="end" id="end">
+                    </div>
+                    <div class="input-group" style="margin-bottom: 10px">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text">去向</span>
+                        </div>
+                        <input class="form-control" name="address" id="address" placeholder="填写地址">
+                    </div>
+                    <div class="input-group" style="margin-bottom: 10px">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text">审核状态</span>
+                        </div>
+                        <input class="form-control" name="status" id="status" placeholder="状态">
+                    </div>
+                    <div class="input-group" style="margin-bottom: 10px">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text">审核意见</span>
+                        </div>
+                        <textarea class="form-control" name="description" id="description" placeholder="审核意见">
+                        </textarea>
+                    </div>
+                    <div class="input-group" style="margin-bottom: 10px">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text">申请人编号</span>
+                        </div>
+                        <input class="form-control" placeholder="申请人编号" name="uid" id="uid">
+                    </div>
+                    <div class="input-group" style="margin-bottom: 10px">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text">内容</span>
+                        </div>
+                        <textarea class="form-control" placeholder="内容" name="content" id="contents">
+                        </textarea>
+                    </div>
+                </div>
+                <div class="modal-footer" style="display: block">
+                    <button onclick="clearForm()" class="btn btn-info" style="float: left">清除</button>
+                    <button onclick="submit_form()" class="btn btn-info" style="float: right">提交</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+</body>
+
+</html>

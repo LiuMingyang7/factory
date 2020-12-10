@@ -1,0 +1,43 @@
+.product-img{
+    width: 80px;
+}
+.small-font{
+    font-size: 12px;
+
+}
+.resume .card-header{
+    background: #2277b8;
+    color: white;
+}
+.resume .card-footer{
+    background: #2277b8;
+}
+.resume .card-header p{
+    color: white;
+    font-size: 12px;
+    margin-top: 50px;
+}
+.content-header{
+    color: #2277b8;
+}
+.content-font{
+    padding-top: 5px;
+    font-size: 13px;
+    color: #818484;
+}
+table thead{
+    background: #2061db;
+    color: white;
+
+}
+table thead th{
+    font-size: 14px;
+    font-weight: normal;
+}
+#myModal.input-group{
+    margin-bottom: 20px;
+}
+
+
+
+
